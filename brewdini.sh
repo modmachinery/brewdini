@@ -22,7 +22,7 @@ wrong_dir () {
 	exit 1
 }
 
-tap_cu {
+tap_cu () {
 	echo; echo -e "${GENIE} WARNING: 'brew-cask-upgrade' not found, tapping now..."; echo
 	${PREFIX}/brew tap buo/cask-upgrade
 	echo "Done."; echo
