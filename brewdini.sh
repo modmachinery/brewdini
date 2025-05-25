@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# https://stackoverflow.com/questions/31968664/upgrade-all-the-casks-installed-via-homebrew-cask
+
+## Set functions
+display_help () {
+	echo -e "${GENIE} This is The Great Brewdini. He only grants one specific wish; he updates"
+	echo "your Homebrew formulae and Casks."; echo
+	echo "Usage: brewdini [-option] [--option]"
+	echo "Options:"
+	echo "   -a, --all		Include apps that auto-update in the upgrade"
+	echo "   -f, --force		Force-reinstall apps that are marked as 'latest'"
+	echo "   -i, --interactive	Run updates in interactive mode"
+	exit 1
+}
+
+wrong_dir () {
+	echo -e "${GENIE} WARNING: Homebrew not found in default location: '$(brew --prefix)'"
+	echo "This is problematic and should be corrected before checking for updates."; echo
+	echo "Visit the following URL for more information:"
+	echo "https://docs.brew.sh/FAQ#why-should-i-install-Homebrew-in-the-default-location"; echo
+	echo "Exiting."
+	exit 1
+}
+
+tap_cu {
+	echo; echo -e "${GENIE} WARNING: 'brew-cask-upgrade' not found, tapping now..."; echo
+	${PREFIX}/brew tap buo/cask-upgrade
+	echo "Done."; echo
+}
+
+## Set variables
+GENIE="\xf0\x9f\xa7\x9e"
+ARGS="-q -y"
+
+## Parse command line options
+while true; do
+	shopt -s nocasematch
+	case "${1}" in
+		-a | --all )
+			ARGS="-a -y -q"
+			shift
+			;;
+		-f | --force )
+			ARGS="-a -f -y -q"
+			shift
+			;;
+		-i | --interactive )
+			ARGS="-a -f -i"
+			shift
+			;;
+		-h | --help )
+			display_help
+			;;
+		\?)
+			;;
+		"" )
+			shift
+			break
+			;;
+		* )
+			echo -e "*** UNKNOWN OPTION ***"; echo
+			display_help
+			;;
+	esac
+done
+
+## Test for Apple silicon
+if [[ $(arch) == arm64 ]]; then
+	if [[ $(brew --prefix) == /opt/homebrew ]]; then
+		PREFIX=$(brew --prefix)/bin
+	else wrong_dir
+	fi
+else
+	if [[ $(brew --prefix) == /usr/local ]]; then
+		PREFIX=$(brew --prefix)/bin
+	else wrong_dir
+	fi
+fi
+
+## Test for brew-cask-upgrade
+if [[ ! $(brew tap | grep cask-upgrade) ]]; then
+	tap_cu
+fi
+
+## Check for Homebrew, Formulae, and Cask upgrades; install them all
+echo -e "${GENIE} Checking Homebrew & Formulae for updates..."; echo
+if [[ "$(${PREFIX}/brew update)" != "Already up-to-date." ]]; then
+	echo; echo -e "${GENIE} Upgrading Homebrew & Formulae..."; echo
+	"${PREFIX}"/brew upgrade
+fi
+echo -e "${GENIE} Checking for Cask updates; upgrading & cleaning up..."; echo
+${PREFIX}/brew cu ${ARGS[@]} --cleanup; echo
+echo -e "${GENIE} Cleaning up Formulae..."
+${PREFIX}/brew cleanup --prune all; echo
+
+## If any Casks are pinned, display them
+PINNED=$(brew cu pinned 2>&1)
+if [[ ${PINNED} ]];
+	then echo -e "${GENIE} No pinned Casks found, skipping..."; echo
+else
+	echo -e "${GENIE} The following Pinned Casks were found:";
+	brew cu pinned; echo
+fi
+
+## Check Homebrew
+echo -e "${GENIE} Process complete; checking Homebrew..."; echo
+## Exit normally if OK
+${PREFIX}/brew doctor \
+	&& echo -e "Done. ${GENIE}" \
+	&& exit 0
+## Exit abormally with message if not OK
+echo; echo -e "${GENIE} Exiting with abnormal status; see above messaging."
+exit 1
