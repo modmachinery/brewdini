@@ -3,7 +3,7 @@
 
 ## Set functions
 display_help () {
-	echo -e "${GENIE} This is The Great Brewdini. He only grants one specific wish; he updates"
+	echo -e "${GENIE} This is The Great Brewdini. He only grants one wish; he updates"
 	echo "your Homebrew formulae and Casks."; echo
 	echo "Usage: brewdini [-option] [--option]"
 	echo "Options:"
