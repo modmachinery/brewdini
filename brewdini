@@ -30,30 +30,22 @@ tap_cu () {
 
 ## Set variables
 GENIE="\xf0\x9f\xa7\x9e"
-ARGS[0]="-q"
-ARGS[1]="-y"
+ARGS=(-q -y)
 
 ## Parse command line options
 while true; do
 	shopt -s nocasematch
 	case "${1}" in
 		-a | --all )
-			ARGS[0]="-a"
-			ARGS[1]="-y"
-			ARGS[3]="-q"
+			ARGS=(-a -y -q)
 			shift
 			;;
 		-f | --force )
-			ARGS[0]="-a"
-			ARGS[1]="-f"
-			ARGS[2]="-y"
-			ARGS[3]="-q"
+			ARGS=(-a -f -y -q)
 			shift
 			;;
 		-i | --interactive )
-			ARGS[0]="-a"
-			ARGS[1]="-f"
-			ARGS[2]="-i"
+			ARGS=(-a -f -i)
 			shift
 			;;
 		-h | --help )
@@ -103,7 +95,7 @@ echo -e "${GENIE} Cleaning up Formulae..."
 
 ## If any Casks are pinned, display them
 PINNED=$(brew cu pinned 2>&1)
-if [[ ${PINNED} ]];
+if [[ -z ${PINNED} ]];
 	then echo -e "${GENIE} No pinned Casks found, skipping..."; echo
 else
 	echo -e "${GENIE} The following Pinned Casks were found:";
