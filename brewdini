@@ -24,28 +24,36 @@ wrong_dir () {
 
 tap_cu () {
 	echo; echo -e "${GENIE} WARNING: 'brew-cask-upgrade' not found, tapping now..."; echo
-	${PREFIX}/brew tap buo/cask-upgrade
+	"${PREFIX}"/brew tap buo/cask-upgrade
 	echo "Done."; echo
 }
 
 ## Set variables
 GENIE="\xf0\x9f\xa7\x9e"
-ARGS="-q -y"
+ARGS[0]="-q"
+ARGS[1]="-y"
 
 ## Parse command line options
 while true; do
 	shopt -s nocasematch
 	case "${1}" in
 		-a | --all )
-			ARGS="-a -y -q"
+			ARGS[0]="-a"
+			ARGS[1]="-y"
+			ARGS[3]="-q"
 			shift
 			;;
 		-f | --force )
-			ARGS="-a -f -y -q"
+			ARGS[0]="-a"
+			ARGS[1]="-f"
+			ARGS[2]="-y"
+			ARGS[3]="-q"
 			shift
 			;;
 		-i | --interactive )
-			ARGS="-a -f -i"
+			ARGS[0]="-a"
+			ARGS[1]="-f"
+			ARGS[2]="-i"
 			shift
 			;;
 		-h | --help )
@@ -78,20 +86,20 @@ else
 fi
 
 ## Test for brew-cask-upgrade
-if [[ ! $(brew tap | grep cask-upgrade) ]]; then
+if ! brew tap | grep cask-upgrade; then
 	tap_cu
 fi
 
 ## Check for Homebrew, Formulae, and Cask upgrades; install them all
 echo -e "${GENIE} Checking Homebrew & Formulae for updates..."; echo
-if [[ "$(${PREFIX}/brew update)" != "Already up-to-date." ]]; then
+if [[ $("${PREFIX}"/brew update) != "Already up-to-date." ]]; then
 	echo; echo -e "${GENIE} Upgrading Homebrew & Formulae..."; echo
 	"${PREFIX}"/brew upgrade
 fi
 echo -e "${GENIE} Checking for Cask updates; upgrading & cleaning up..."; echo
-${PREFIX}/brew cu ${ARGS[@]} --cleanup; echo
+"${PREFIX}"/brew cu "${ARGS[@]}" --cleanup; echo
 echo -e "${GENIE} Cleaning up Formulae..."
-${PREFIX}/brew cleanup --prune all; echo
+"${PREFIX}"/brew cleanup --prune all; echo
 
 ## If any Casks are pinned, display them
 PINNED=$(brew cu pinned 2>&1)
@@ -105,7 +113,7 @@ fi
 ## Check Homebrew
 echo -e "${GENIE} Process complete; checking Homebrew..."; echo
 ## Exit normally if OK
-${PREFIX}/brew doctor \
+"${PREFIX}"/brew doctor \
 	&& echo -e "Done. ${GENIE}" \
 	&& exit 0
 ## Exit abormally with message if not OK
