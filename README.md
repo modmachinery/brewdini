@@ -1,7 +1,10 @@
 # 🧞 brewdini
 This is The Great Brewdini. He only grants one wish; he updates your Homebrew formulae and Casks.
+
+## What it does
 Utilizes built-in Homebrew commands, and [homebrew-cask-upgrade](https://github.com/buo/homebrew-cask-upgrade) by [buo](https://github.com/buo).
 
+Performs `brew doctor`, then automatically cleans up after itself if all commands succeed.
 
 ## Usage
 
