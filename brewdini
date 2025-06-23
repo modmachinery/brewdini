@@ -91,7 +91,7 @@ fi
 echo -e "${GENIE} Checking for Cask updates; upgrading & cleaning up..."; echo
 "${PREFIX}"/brew cu "${ARGS[@]}" --cleanup; echo
 echo -e "${GENIE} Cleaning up Formulae..."
-"${PREFIX}"/brew cleanup --prune all; echo
+"${PREFIX}"/brew cleanup --prune=all; echo
 
 ## If any Casks are pinned, display them
 PINNED=$(brew cu pinned 2>&1)
