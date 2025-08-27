@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# https://stackoverflow.com/questions/31968664/upgrade-all-the-casks-installed-via-homebrew-cask
 
 ## Set functions
 display_help () {
@@ -39,28 +38,28 @@ while true; do
 		-a | --all )
 			ARGS=(-a -y -q)
 			shift
-			;;
+		;;
 		-f | --force )
 			ARGS=(-a -f -y -q)
 			shift
-			;;
+		;;
 		-i | --interactive )
 			ARGS=(-a -f -i)
 			shift
-			;;
+		;;
 		-h | --help )
 			display_help
-			;;
+		;;
 		\?)
-			;;
+		;;
 		"" )
 			shift
 			break
-			;;
+		;;
 		* )
 			echo -e "*** UNKNOWN OPTION ***"; echo
 			display_help
-			;;
+		;;
 	esac
 done
 
@@ -68,12 +67,14 @@ done
 if [[ $(arch) == arm64 ]]; then
 	if [[ $(brew --prefix) == /opt/homebrew ]]; then
 		PREFIX=$(brew --prefix)/bin
-	else wrong_dir
+	else
+		wrong_dir
 	fi
 else
 	if [[ $(brew --prefix) == /usr/local ]]; then
 		PREFIX=$(brew --prefix)/bin
-	else wrong_dir
+	else
+		wrong_dir
 	fi
 fi
 
@@ -95,8 +96,8 @@ echo -e "${GENIE} Cleaning up Formulae..."
 
 ## If any Casks are pinned, display them
 PINNED=$(brew cu pinned 2>&1)
-if [[ -z ${PINNED} ]];
-	then echo -e "${GENIE} No pinned Casks found, skipping..."; echo
+if [[ -z ${PINNED} ]]; then
+	echo -e "${GENIE} No pinned Casks found, skipping..."; echo
 else
 	echo -e "${GENIE} The following Pinned Casks were found:";
 	brew cu pinned; echo
@@ -106,8 +107,8 @@ fi
 echo -e "${GENIE} Process complete; checking Homebrew..."; echo
 ## Exit normally if OK
 "${PREFIX}"/brew doctor \
-	&& echo -e "Done. ${GENIE}" \
-	&& exit 0
+&& echo -e "Done. ${GENIE}" \
+&& exit 0
 ## Exit abormally with message if not OK
 echo; echo -e "${GENIE} Exiting with abnormal status; see above messaging."
 exit 1
