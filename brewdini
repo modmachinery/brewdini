@@ -79,7 +79,7 @@ else
 fi
 
 ## Test for brew-cask-upgrade
-if ! brew tap | grep cask-upgrade; then
+if ! brew tap | grep cask-upgrade >/dev/null; then
 	tap_cu
 fi
 
