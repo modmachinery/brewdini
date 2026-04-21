@@ -2,49 +2,51 @@
 
 ## Set functions
 display_help () {
-	echo -e "${GENIE} This is The Great Brewdini. He only grants one wish; he updates"
-	echo "your Homebrew formulae and Casks."; echo
-	echo "Usage: brewdini [-option] [--option]"
-	echo "Options:"
-	echo "   -a, --all		Include apps that auto-update in the upgrade"
-	echo "   -f, --force		Force-reinstall apps that are marked as 'latest'"
-	echo "   -i, --interactive	Run updates in interactive mode"
+	# shellcheck disable=SC2059
+	printf "${Genie} This is The Great Brewdini. He only grants one wish; he updates your Homebrew formulae and Casks.\n" \
+	| fmt -w 80
+	printf "Usage: brewdini [-option] [--option]\n"
+	printf "Options:\n"
+	printf "%-20s\t%s\n" "  -a, --all" "Include apps that auto-update in the upgrade"
+	printf "%-20s\t%s\n" "  -f, --force" "Force-reinstall apps that are marked as 'latest"
+	printf "%-20s\t%s\n" "  -i, --interactive" "Run updates in interactive mode"
 	exit 1
 }
 
 wrong_dir () {
-	echo -e "${GENIE} WARNING: Homebrew not found in default location: '$(brew --prefix)'"
-	echo "This is problematic and should be corrected before checking for updates."; echo
-	echo "Visit the following URL for more information:"
-	echo "https://docs.brew.sh/FAQ#why-should-i-install-Homebrew-in-the-default-location"; echo
-	echo "Exiting."
+	# shellcheck disable=SC2059
+	printf "\a${Genie} WARNING: Homebrew not found in default location: '$(brew --prefix)'\n"
+	printf "This is problematic and should be corrected before checking for updates. Visit the following URL for more information:\n" \
+	| fmt -w 80
+	printf "https://docs.brew.sh/FAQ#why-should-i-install-Homebrew-in-the-default-location\n"
+	printf "\nExiting.\n"
 	exit 1
 }
 
 tap_cu () {
-	echo; echo -e "${GENIE} WARNING: 'brew-cask-upgrade' not found, tapping now..."; echo
-	"${PREFIX}"/brew tap buo/cask-upgrade
-	echo "Done."; echo
+	printf "\a\n${Genie} WARNING: 'brew-cask-upgrade' not found, tapping now...\n"; echo
+	brew tap buo/cask-upgrade
+	printf "Done.\n"
 }
 
 ## Set variables
-GENIE="\xf0\x9f\xa7\x9e"
-ARGS=(-q -y)
+Genie="\U1F9DE"		# 🧞
+Args=(-q -y)
 
 ## Parse command line options
 while true; do
 	shopt -s nocasematch
-	case "${1}" in
+	case "$1" in
 		-a | --all )
-			ARGS=(-a -y -q)
+			Args=(-a -y -q)
 			shift
 		;;
 		-f | --force )
-			ARGS=(-a -f -y -q)
+			Args=(-a -f -y -q)
 			shift
 		;;
 		-i | --interactive )
-			ARGS=(-a -f -i)
+			Args=(-a -f -i)
 			shift
 		;;
 		-h | --help )
@@ -65,15 +67,11 @@ done
 
 ## Test for Apple silicon
 if [[ $(arch) == arm64 ]]; then
-	if [[ $(brew --prefix) == /opt/homebrew ]]; then
-		PREFIX=$(brew --prefix)/bin
-	else
+	if [[ $(brew --prefix) != /opt/homebrew ]]; then
 		wrong_dir
 	fi
 else
-	if [[ $(brew --prefix) == /usr/local ]]; then
-		PREFIX=$(brew --prefix)/bin
-	else
+	if [[ $(brew --prefix) != /usr/local ]]; then
 		wrong_dir
 	fi
 fi
@@ -84,31 +82,40 @@ if ! brew tap | grep cask-upgrade >/dev/null; then
 fi
 
 ## Check for Homebrew, Formulae, and Cask upgrades; install them all
-echo -e "${GENIE} Checking Homebrew & Formulae for updates..."; echo
-if [[ $("${PREFIX}"/brew update) != "Already up-to-date." ]]; then
-	echo; echo -e "${GENIE} Upgrading Homebrew & Formulae..."; echo
-	"${PREFIX}"/brew upgrade
+# shellcheck disable=SC2059
+printf "${Genie} Checking Homebrew & Formulae for updates...\n\n"
+if [[ $(brew update) != "Already up-to-date." ]]; then
+	# shellcheck disable=SC2059
+	printf "\n${Genie} Upgrading Homebrew & Formulae...\n\n"
+	brew upgrade
 fi
-echo -e "${GENIE} Checking for Cask updates; upgrading & cleaning up..."; echo
-"${PREFIX}"/brew cu "${ARGS[@]}" --cleanup; echo
-echo -e "${GENIE} Cleaning up Formulae..."
-"${PREFIX}"/brew cleanup --prune=all; echo
+
+# shellcheck disable=SC2059
+printf "${Genie} Checking for Cask updates; upgrading & cleaning up...\n\n"
+brew cu "${Args[@]}" --cleanup; echo
+
+# shellcheck disable=SC2059
+printf "${Genie} Cleaning up Formulae...\n"
+brew cleanup --prune=all; echo
 
 ## If any Casks are pinned, display them
-PINNED=$(brew cu pinned 2>&1)
-if [[ -z ${PINNED} ]]; then
-	echo -e "${GENIE} No pinned Casks found, skipping..."; echo
+Pinned=$(brew cu pinned 2>&1)
+if [[ -z ${Pinned} ]]; then
+	# shellcheck disable=SC2059
+	printf "${Genie} No pinned Casks found, skipping...\n\n"
 else
-	echo -e "${GENIE} The following Pinned Casks were found:";
-	brew cu pinned; echo
+	printf "${Genie} The following Pinned Casks were found:\n";
+	brew cu pinned
 fi
 
 ## Check Homebrew
-echo -e "${GENIE} Process complete; checking Homebrew..."; echo
+printf "\n${Genie} Process complete; checking Homebrew...\n\n"
 ## Exit normally if OK
-"${PREFIX}"/brew doctor \
-&& echo -e "Done. ${GENIE}" \
+brew doctor \
+&& echo -e "Done. $Genie" \
 && exit 0
+
 ## Exit abormally with message if not OK
-echo; echo -e "${GENIE} Exiting with abnormal status; see above messaging."
+# shellcheck disable=SC2059
+printf "\a\n${Genie} Exiting with abnormal status; see above messaging.\n"
 exit 1
