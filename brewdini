@@ -110,12 +110,14 @@ fi
 
 ## Check Homebrew
 printf "\n${Genie} Process complete; checking Homebrew...\n\n"
-## Exit normally if OK
-brew doctor \
-&& echo -e "Done. $Genie" \
-&& exit 0
 
-## Exit abormally with message if not OK
-# shellcheck disable=SC2059
-printf "\a\n${Genie} Exiting with abnormal status; see above messaging.\n"
-exit 1
+## Exit normally if OK
+if brew doctor; then
+	printf "Done. ${Genie}"
+	exit 0
+else
+	## Exit abormally with message if not OK
+	# shellcheck disable=SC2059
+	printf "\a\n${Genie} Exiting with abnormal status; see above messaging.\n"
+	exit 1
+fi
