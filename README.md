@@ -1,25 +1,21 @@
-# 🧞 (The Great) Brewdini
-This is The Great Brewdini. He can only grant one wish: Updating your Homebrew formulae and Casks.
+# 🧞 Brewdini
+This is *The Great Brewdini*. He can grant one specific wish:
+### *"Update all my Homebrew Formulae & Casks in a single command!"*
 
 ## What Brewdini does
-Brewdini mixes a combination of built-in Homebrew commands with [homebrew-cask-upgrade](https://github.com/buo/homebrew-cask-upgrade) by [buo](https://github.com/buo).
-
-After the updates are completed he runs `brew doctor`. If all commands succeed, he will then clean up and prune all downloads.
+- Runs `brew update` to check for pending updates; automatically runs `brew upgrade` if so
+- If all commands succeed, runs `brew cleanup --prune=all`
+- Will also run `brew doctor` if the `--check` option is called
 
 ## Usage
-```console
+
+```bash
 brewdini [-option] [--option]
 ```
 
 ## Options
-* `-a`, `--all`
-
-   Include apps that auto-update in the upgrade
-
-* `-f`, `--force`
-
-   Force-reinstall apps that are marked as 'latest'
-
-* `-i`, `--interactive`
-
-   Run updates in interactive mode
+|Option|Action|
+|-|-|
+|`-h`, `--help`| Displays help & usage |
+|`-f`, `--force`| Force-upgrade Formulae & Casks marked as 'latest' |
+|`-c`, `--check`| Runs 'brew doctor' after updates complete to check Homebrew |
