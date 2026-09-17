@@ -39,6 +39,9 @@ Args=(--quiet --yes)
 ScriptDir=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 Thunk=$ScriptDir/back-into-the-bottle.mp3
 
+## Tempfile
+CheckUpdateFile=$(mktemp)
+
 ## Parse command line options
 unset Code Doctor
 while true; do
@@ -86,7 +89,14 @@ fi
 ## Check for Homebrew, Formulae, and Cask upgrades; install them all
 printf "${Genie} %s\n" \
 	"${cPrp}Checking Homebrew & Formulae for updates...${cOff}"
-if [[ $(brew update) != "Already up-to-date." ]]; then
+brew update > "$CheckUpdateFile" 2>&1
+if grep -q Error: "$CheckUpdateFile"; then
+	cat "$CheckUpdateFile"
+	printf "\a\n${Genie} %s\n" \
+		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
+		afplay "$Thunk" >/dev/null 2>&1 & true
+	exit 0
+elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
 	printf "\n${Genie} %s\n" \
 		"${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
 	brew upgrade "${Args[@]}"
