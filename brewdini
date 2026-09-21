@@ -30,6 +30,10 @@ wrong_dir () {
 	exit 1
 }
 
+sound_thunk () {
+	afplay "$Thunk" >/dev/null 2>&1 & true
+}
+
 ## Set variables
 Genie="\U1F9DE"		# 🧞
 cBld=$(tput bold)
@@ -94,7 +98,7 @@ if grep -q Error: "$CheckUpdateFile"; then
 	cat "$CheckUpdateFile"
 	printf "\a\n${Genie} %s\n" \
 		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
-		afplay "$Thunk" >/dev/null 2>&1 & true
+		sound_thunk
 	exit 0
 elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
 	printf "\n${Genie} %s\n" \
@@ -111,7 +115,7 @@ brew cleanup --prune=all
 printf "\n${Genie} %s\n" \
 	"${cPrp}Your wish has been granted! Update process is complete!${cOff}"
 if [[ -z $Doctor ]]; then
-	afplay "$Thunk" >/dev/null 2>&1 & true
+	sound_thunk
 	exit 0
 fi
 
@@ -123,12 +127,12 @@ printf '%s\n' \
 if brew doctor; then
 	printf "%s ${Genie}\n" \
 		"${cPrp}Done!${cOff}"
-		afplay "$Thunk" >/dev/null 2>&1 & true
+		sound_thunk
 	exit 0
 else
 	## Exit abormally with message if not OK
 	printf "\a${Genie} %s\n" \
 		"${cPrp}Exiting with abnormal status; see above messaging.${cOff}"
-		afplay "$Thunk" >/dev/null 2>&1 & true
+		sound_thunk
 	exit 1
 fi
