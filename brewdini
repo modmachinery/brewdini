@@ -39,7 +39,8 @@ Genie="\U1F9DE"		# 🧞
 cBld=$(tput bold)
 cPrp=$(tput setaf 103)
 cOff=$(tput sgr0)
-Args=(--quiet --yes)
+UpdateArgs=()
+UpgradeArgs=(--quiet --no-ask)
 ScriptDir=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 Thunk=$ScriptDir/back-into-the-bottle.mp3
 
@@ -52,7 +53,8 @@ while true; do
 	shopt -s nocasematch
 	case "$1" in
 		-f | --force )
-			Args+=(--greedy)
+			UpdateArgs=(--force)
+			UpgradeArgs+=(--greedy)
 			shift
 		;;
 		-c | --check )
@@ -93,14 +95,14 @@ fi
 ## Check for Homebrew, Formulae, and Cask upgrades; install them all
 printf "${Genie} %s\n" \
 	"${cPrp}Checking Homebrew & Formulae for updates...${cOff}"
-brew update > "$CheckUpdateFile" 2>&1
+brew update "${UpdateArgs[@]}"> "$CheckUpdateFile" 2>&1
 if grep -q Error: "$CheckUpdateFile"; then
 	cat "$CheckUpdateFile"
 	printf "\a\n${Genie} %s\n" \
 		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
 		sound_thunk
 	exit 0
-elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
+elif ! grep "Already up-to-date." "$CheckUpdateFile"; then
 	printf "\n${Genie} %s\n" \
 		"${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
 	brew upgrade "${Args[@]}"
