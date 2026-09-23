@@ -47,7 +47,6 @@ Thunk=$ScriptDir/back-into-the-bottle.mp3
 ## Tempfile
 CheckUpdateFile=$(mktemp)
 
-
 ## Expand combined short options (e.g. -fc -> -f -c)
 export Args=()
 while [[ $# -gt 0 ]]; do
