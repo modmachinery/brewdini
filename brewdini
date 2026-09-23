@@ -47,7 +47,23 @@ Thunk=$ScriptDir/back-into-the-bottle.mp3
 ## Tempfile
 CheckUpdateFile=$(mktemp)
 
-## Parse command line options
+
+## Expand combined short options (e.g. -fc -> -f -c)
+export Args=()
+while [[ $# -gt 0 ]]; do
+	if [[ $1 =~ ^-([a-zA-Z]{2,})$ ]]; then
+		OpsStr="${1:1}"
+		for (( i=0; i<${#OpsStr}; i++ )); do
+			Args+=("-${OpsStr:$i:1}")
+		done
+	else
+		Args+=("$1")
+	fi
+	shift
+done
+set -- "${Args[@]}"
+
+## Parse options
 unset Code Doctor
 while true; do
 	shopt -s nocasematch
@@ -64,8 +80,6 @@ while true; do
 		-h | --help )
 			Code=0
 			display_help
-		;;
-		\?)
 		;;
 		"" )
 			shift
@@ -102,10 +116,12 @@ if grep -q Error: "$CheckUpdateFile"; then
 		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
 		sound_thunk
 	exit 0
-elif ! grep "Already up-to-date." "$CheckUpdateFile"; then
+elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
 	printf "\n${Genie} %s\n" \
 		"${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
 	brew upgrade "${Args[@]}"
+elif grep "Already up-to-date." "$CheckUpdateFile"; then
+	UpToDate=y
 fi
 
 ## Clean Homebrew
@@ -113,9 +129,16 @@ printf "\n${Genie} %s\n" \
 	"${cPrp}Cleaning up Formulae...${cOff}"
 brew cleanup --prune=all
 
-## Wish Granted!
-printf "\n${Genie} %s\n" \
-	"${cPrp}Your wish has been granted! Update process is complete!${cOff}"
+## Print Update Status
+if [[ $UpToDate == y ]]; then
+	printf "\n${Genie} %s\n" \
+		"${cPrp}Your wish has been granted: The update check passed!${cOff}"
+else
+	printf "\n${Genie} %s\n" \
+		"${cPrp}Your wish has been granted: The upgrade process is completed!${cOff}"
+fi
+
+## Exit early if Brew Doctor wasn't called
 if [[ -z $Doctor ]]; then
 	sound_thunk
 	exit 0
@@ -123,7 +146,7 @@ fi
 
 ## Check Homebrew
 printf '%s\n' \
-	"   Now checking Homebrew...${cOff}"
+	"   ${cPrp}Calling the Homebrew Doctor...${cOff}"
 
 ## Exit normally if OK
 if brew doctor; then
@@ -135,6 +158,5 @@ else
 	## Exit abormally with message if not OK
 	printf "\a${Genie} %s\n" \
 		"${cPrp}Exiting with abnormal status; see above messaging.${cOff}"
-		sound_thunk
 	exit 1
 fi
