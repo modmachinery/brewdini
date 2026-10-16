@@ -136,21 +136,20 @@ mapfile -t Check < <(
 )
 
 if [[ -n ${Check[*]} ]]; then
-	printf '\a%s\n\n' \
+	printf '\a%s\n%s' \
 		"${cPrp}   Some outdated packages were found during cleanup:${cOff}" "   "
-	preIFS=$IFS
-	IFS=, echo "${Check[*]}"
-	IFS=$preIFS
+	# shellcheck disable=SC2001
+	echo "${Check[@]}" | sed 's/ /, /g'
 	printf "\n${Genie} %s" \
-		"${cPrp}Update them now? ${cOff}" 
-	read -rp "[y/N]: " yN
+		"${cPrp}Update them now?${cOff} [y/N]: "
+	read -r yN
 	case $yN in
 		y | Y )
 			printf "\n${Genie} %s\n" "Updating..."
 			for op in "${Check[@]}"; do
 				brew install "$op"
 			done
-			printf "\n${Genie} %s\n" "Done!"
+			# printf "\n${Genie} %s\n" "Done!"
 			;;
 		* )
 			return
@@ -168,7 +167,7 @@ else
 fi
 
 ## Exit early if Brew Doctor wasn't called
-if [[ -z $Doctor ]]; then
+if [[ $Doctor != y ]]; then
 	sound_thunk
 	exit 0
 fi
