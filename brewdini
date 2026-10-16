@@ -116,17 +116,47 @@ if grep -q Error: "$CheckUpdateFile"; then
 		sound_thunk
 	exit 0
 elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
-	printf "\n${Genie} %s\n" \
-		"${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
+	printf "%s\n" \
+		"   ${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
 	brew upgrade "${Args[@]}"
 elif grep "Already up-to-date." "$CheckUpdateFile"; then
 	UpToDate=y
 fi
 
-## Clean Homebrew
+## Clean Homebrew & Check Outdated
 printf "\n${Genie} %s\n" \
 	"${cPrp}Cleaning up Formulae...${cOff}"
-brew cleanup --prune=all
+
+mapfile -t Check < <(
+	brew cleanup --prune=all \
+	| tee /dev/tty \
+	| grep "recent version" \
+	| awk '{ print $3 }' \
+	| tr -d :
+)
+
+if [[ -n ${Check[*]} ]]; then
+	printf '\a%s\n\n' \
+		"${cPrp}   Some outdated packages were found during cleanup:${cOff}" "   "
+	preIFS=$IFS
+	IFS=, echo "${Check[*]}"
+	IFS=$preIFS
+	printf "\n${Genie} %s" \
+		"${cPrp}Update them now? ${cOff}" 
+	read -rp "[y/N]: " yN
+	case $yN in
+		y | Y )
+			printf "\n${Genie} %s\n" "Updating..."
+			for op in "${Check[@]}"; do
+				brew install "$op"
+			done
+			printf "\n${Genie} %s\n" "Done!"
+			;;
+		* )
+			return
+			;;
+	esac
+fi
 
 ## Print Update Status
 if [[ $UpToDate == y ]]; then
