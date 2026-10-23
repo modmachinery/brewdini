@@ -115,18 +115,49 @@ if grep -q Error: "$CheckUpdateFile"; then
 		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
 		sound_thunk
 	exit 0
-elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
-	printf "\n${Genie} %s\n" \
-		"${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
-	brew upgrade "${Args[@]}"
+elif ! grep -q "Already up-to-date." "$CheckUpdateFile" \
+|| [[ ${UpgradeArgs[*]} =~ --greedy ]]; then
+	printf "%s\n" \
+		"   ${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
+	brew upgrade "${UpgradeArgs[@]}"
 elif grep "Already up-to-date." "$CheckUpdateFile"; then
 	UpToDate=y
 fi
 
-## Clean Homebrew
+## Clean Homebrew & Check Outdated
 printf "\n${Genie} %s\n" \
 	"${cPrp}Cleaning up Formulae...${cOff}"
-brew cleanup --prune=all
+
+## Display on-screen progress while also checking for message
+mapfile -t Check < <(
+	brew cleanup --prune=all \
+	| tee /dev/tty \
+	| grep "recent version" \
+	| awk '{ print $3 }' \
+	| tr -d :
+)
+
+## If message discovered, prompt user to make upgrade decision
+if [[ -n ${Check[*]} ]]; then
+	printf '\a%s\n%s' \
+		"${cPrp}   Some outdated packages were found during cleanup:${cOff}" "   "
+	# shellcheck disable=SC2001	# Couldn't determine a better method to print readable CSV's
+	echo "${Check[@]}" | sed 's/ /, /g'
+	printf "\n${Genie} %s" \
+		"${cPrp}Upgrade them now?${cOff} [y/N]: "
+	read -r yN
+	case $yN in
+		y | Y )
+			printf "\n${Genie} %s\n" "Updating..."
+			for op in "${Check[@]}"; do
+				brew install "$op"
+			done
+			;;
+		* )
+			return
+			;;
+	esac
+fi
 
 ## Print Update Status
 if [[ $UpToDate == y ]]; then
@@ -137,24 +168,24 @@ else
 		"${cPrp}Your wish has been granted: The upgrade process is completed!${cOff}"
 fi
 
-## Exit early if Brew Doctor wasn't called
-if [[ -z $Doctor ]]; then
+## Exit here if the Homebrew Doctor not called
+if [[ $Doctor != y ]]; then
 	sound_thunk
 	exit 0
 fi
 
-## Check Homebrew
+## Call the Homebrew Doctor
 printf '%s\n' \
 	"   ${cPrp}Calling the Homebrew Doctor...${cOff}"
 
-## Exit normally if OK
+## Only exit normally after a completely clean bill-of-health
 if brew doctor; then
 	printf "%s ${Genie}\n" \
 		"${cPrp}Done!${cOff}"
 		sound_thunk
 	exit 0
 else
-	## Exit abormally with message if not OK
+	## Exit abormally for anything discovered
 	printf "\a${Genie} %s\n" \
 		"${cPrp}Exiting with abnormal status; see above messaging.${cOff}"
 	exit 1
