@@ -115,10 +115,11 @@ if grep -q Error: "$CheckUpdateFile"; then
 		"${cPrp}Uh oh! Can't grant wishes right now. Exiting...${cOff}"
 		sound_thunk
 	exit 0
-elif ! grep -q "Already up-to-date." "$CheckUpdateFile"; then
+elif ! grep -q "Already up-to-date." "$CheckUpdateFile" \
+|| [[ ${UpgradeArgs[*]} =~ --greedy ]]; then
 	printf "%s\n" \
 		"   ${cPrp}Granting wish; upgrading Homebrew & Formulae...${cOff}"
-	brew upgrade "${Args[@]}"
+	brew upgrade "${UpgradeArgs[@]}"
 elif grep "Already up-to-date." "$CheckUpdateFile"; then
 	UpToDate=y
 fi
